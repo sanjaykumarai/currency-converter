@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Currency Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            overflow: hidden;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: moveParticle 20s linear infinite;
+        }
+
+        @keyframes moveParticle {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 90%;
+            max-width: 500px;
+            z-index: 1;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .converter-box {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .currency-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        button {
+            padding: 1.2rem;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #result {
+            margin-top: 1.5rem;
+            padding: 1.2rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles"></div>
+    <div class="container">
+        <h1>Global Currency Converter</h1>
+        <div class="converter-box">
+            <div class="input-group">
+                <input type="number" id="amount" placeholder="Enter amount" min="0" step="0.01">
+            </div>
+            <div class="currency-container">
+                <select id="fromCurrency"></select>
+                <select id="toCurrency"></select>
+            </div>
+            <button onclick="convertCurrency()">Convert Currency</button>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Create animated particles
+        function createParticles() {
+            const particlesContainer = document.querySelector('.particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Random position and movement
+                const tx = Math.random() * window.innerWidth - 100;
+                const ty = Math.random() * window.innerHeight - 100;
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                
+                // Random starting position
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation delay
+                particle.style.animationDelay = `${Math.random() * 20}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Currency data
+        const currencies = {
+            "USD": "US Dollar",
+            "EUR": "Euro",
+            "GBP": "British Pound",
+            "JPY": "Japanese Yen",
+            "AUD": "Australian Dollar",
+            "CAD": "Canadian Dollar",
+            "CHF": "Swiss Franc",
+            "CNY": "Chinese Yuan",
+            "INR": "Indian Rupee",
+            "NZD": "New Zealand Dollar",
+            "BRL": "Brazilian Real",
+            "RUB": "Russian Ruble",
+            "ZAR": "South African Rand",
+            "MXN": "Mexican Peso",
+            "SGD": "Singapore Dollar",
+            "HKD": "Hong Kong Dollar",
+            "NOK": "Norwegian Krone",
+            "SEK": "Swedish Krona",
+            "DKK": "Danish Krone",
+            "PLN": "Polish Złoty",
+            "TRY": "Turkish Lira",
+            "KRW": "South Korean Won",
+            "AED": "UAE Dirham",
+            "SAR": "Saudi Riyal",
+            "THB": "Thai Baht",
+            "IDR": "Indonesian Rupiah",
+            "MYR": "Malaysian Ringgit",
+            "PHP": "Philippine Peso",
+            "CZK": "Czech Koruna",
+            "HUF": "Hungarian Forint",
+            "ILS": "Israeli Shekel",
+            "CLP": "Chilean Peso",
+            "ARS": "Argentine Peso",
+            "EGP": "Egyptian Pound",
+            "VND": "Vietnamese Dong"
+        };
+
+        // Populate currency dropdowns
+        function populateCurrencyDropdowns() {
+            const fromSelect = document.getElementById('fromCurrency');
+            const toSelect = document.getElementById('toCurrency');
+            
+            Object.entries(currencies).forEach(([code, name]) => {
+                const optionFrom = new Option(`${code} - ${name}`, code);
+                const optionTo = new Option(`${code} - ${name}`, code);
+                
+                fromSelect.add(optionFrom);
+                toSelect.add(optionTo);
+            });
+
+            // Set default selections
+            fromSelect.value = 'USD';
+            toSelect.value = 'EUR';
+        }
+
+        // Simulated exchange rates (in a real application, these would come from an API)
+        function getExchangeRate(from, to) {
+            // Simplified random rate generation for demonstration
+            const baseRates = {
+                USD: 1,
+                EUR: 0.85,
+                GBP: 0.73,
+                JPY: 110,
+                CNY: 6.45,
+                INR: 74.5
+            };
+
+            const fromRate = baseRates[from] || (Math.random() * 2 + 0.5);
+            const toRate = baseRates[to] || (Math.random() * 2 + 0.5);
+
+            return toRate / fromRate;
+        }
+
+        function convertCurrency() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const fromCurrency = document.getElementById('fromCurrency').value;
+            const toCurrency = document.getElementById('toCurrency').value;
+            const resultDiv = document.getElementById('result');
+
+            if (isNaN(amount)) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            const rate = getExchangeRate(fromCurrency, toCurrency);
+            const result = (amount * rate).toFixed(2);
+            
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = `${amount} ${fromCurrency} = ${result} ${toCurrency}`;
+            resultDiv.style.animation = 'none';
+            resultDiv.offsetHeight; // Trigger reflow
+            resultDiv.style.animation = null;
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            createParticles();
+            populateCurrencyDropdowns();
+        };
+    </script>
+</body>
+</html>
